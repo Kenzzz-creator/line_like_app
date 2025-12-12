@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Firebase_version9_RealtimeDB(G'sACADEMY初学者用サンプル)</title>
+    <link rel="stylesheet" href="css/reset.css" />
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+
+  <body>
+    <h1>チャットアプリ</h1>
+    <!-- コンテンツ表示画面 -->
+    <div>
+      <!-- 各場所にidを設定しましょう -->
+      <div>
+        <input id="uname" type="text" placeholder="名前を入力してください" />
+      </div>
+      <div>
+        <textarea id="text" placeholder="文章を入力してください"></textarea>
+      </div>
+      <button id="send">送信</button>
+
+      <!-- style.cssに "overflow: auto;"を書いてみましょう！※最後に -->
+      <div id="output"></div>
+    </div>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script type="module">
+      // Import the functions you need from the SDKs you need
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/9.1.0/firebase-app.js";
+      import { getDatabase, ref, push, set, onChildAdded, remove, onChildRemoved } from "https://www.gstatic.com/firebasejs/9.1.0/firebase-database.js";
+
+      // Your web app's Firebase configuration
+      // Import the functions you need from the SDKs you need
+      // import { initializeApp } from "firebase/app";
+      // TODO: Add SDKs for Firebase products that you want to use
+      // https://firebase.google.com/docs/web/setup#available-libraries
+
+      // Your web app's Firebase configuration
+
+      // 初期化
+      const app = initializeApp(firebaseConfig);
+      const db = getDatabase(app);
+      const dbRef = ref(db, "chat");
+
+      // 送信
+      $("#send").on("click", function () {
+        const msg = {
+          uname: $("#uname").val(),
+          text: $("#text").val(),
+        };
+
+        const newPostRef = push(dbRef);
+        set(newPostRef, msg);
+
+        $("#uname").val("");
+        $("#text").val("");
+      });
+
+      // 追加されたデータを画面に表示
+      onChildAdded(dbRef, function (data) {
+        const msg = data.val();
+        const key = data.key;
+
+        let html = `
+    <div class="msg-box" data-key="${key}">
+      <p>${msg.uname}</p>
+      <p>${msg.text}</p>
+      <button class="delete" data-key="${key}">削除</button>
+    </div>
+  `;
+
+        $("#output").append(html);
+      });
+
+      // 削除処理
+      $(document).on("click", ".delete", function () {
+        const key = $(this).data("key");
+
+        // Firebaseから削除
+        remove(ref(db, "chat/" + key));
+
+        // 画面から削除
+        $(`.msg-box[data-key="${key}"]`).remove();
+      });
+    </script>
+  </body>
+</html>
